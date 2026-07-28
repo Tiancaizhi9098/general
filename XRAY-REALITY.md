@@ -28,13 +28,13 @@
 Debian/Ubuntu：
 
 ```bash
-apt-get update && apt-get install -y curl ca-certificates openssl jq iproute2 && bash -c "$(curl -fsSL 'https://raw.githubusercontent.com/Tiancaizhi9098/general/c93b8fa3ffb6d2659e3753f8b4b84c2b9b3ff519/xray-reality-installer.sh')"
+apt-get update && apt-get install -y curl ca-certificates openssl jq iproute2 && bash -c "$(curl -fsSL 'https://raw.githubusercontent.com/Tiancaizhi9098/general/05035155b2bf698ad099e1e256564314365e3179/xray-reality-installer.sh')"
 ```
 
 CentOS Stream、Rocky Linux、AlmaLinux：
 
 ```bash
-(command -v dnf >/dev/null 2>&1 && dnf install -y curl ca-certificates openssl jq iproute || yum install -y curl ca-certificates openssl jq iproute) && bash -c "$(curl -fsSL 'https://raw.githubusercontent.com/Tiancaizhi9098/general/c93b8fa3ffb6d2659e3753f8b4b84c2b9b3ff519/xray-reality-installer.sh')"
+(command -v dnf >/dev/null 2>&1 && dnf install -y curl ca-certificates openssl jq iproute || yum install -y curl ca-certificates openssl jq iproute) && bash -c "$(curl -fsSL 'https://raw.githubusercontent.com/Tiancaizhi9098/general/05035155b2bf698ad099e1e256564314365e3179/xray-reality-installer.sh')"
 ```
 
 一键命令会先安装依赖再执行脚本；脚本自身也会检测并补装缺失依赖。
@@ -74,7 +74,7 @@ SERVER_NAME=hkg.biliimg.com \
 REALITY_DEST=hkg.biliimg.com:443 \
 SERVER_ADDRESS=node.example.com \
 NODE_NAME=香港落地 \
-bash -c "$(curl -fsSL 'https://raw.githubusercontent.com/Tiancaizhi9098/general/c93b8fa3ffb6d2659e3753f8b4b84c2b9b3ff519/xray-reality-installer.sh')"
+bash -c "$(curl -fsSL 'https://raw.githubusercontent.com/Tiancaizhi9098/general/05035155b2bf698ad099e1e256564314365e3179/xray-reality-installer.sh')"
 ```
 
 如果使用 `sudo`，建议先切换到 root，避免环境变量被 `sudo` 丢弃：
@@ -91,7 +91,7 @@ sudo -i
 
 ```yaml
 proxies:
-  - name: "VLESS-REALITY"
+  - name: VLESS-REALITY
     type: vless
     server: "203.0.113.10"
     port: 443
@@ -156,7 +156,7 @@ REALITY 私钥只保存在服务端的 Xray 配置中；Mihomo 文件和控制�
 通过 `curl | bash` 运行脚本前，可以先下载并检查内容：
 
 ```bash
-curl -fsSL 'https://raw.githubusercontent.com/Tiancaizhi9098/general/c93b8fa3ffb6d2659e3753f8b4b84c2b9b3ff519/xray-reality-installer.sh' -o install.sh
+curl -fsSL 'https://raw.githubusercontent.com/Tiancaizhi9098/general/05035155b2bf698ad099e1e256564314365e3179/xray-reality-installer.sh' -o install.sh
 less install.sh
 bash install.sh
 ```
