@@ -73,6 +73,14 @@ validate_settings() {
 }
 
 install_dependencies() {
+  if command -v curl >/dev/null 2>&1 \
+    && command -v openssl >/dev/null 2>&1 \
+    && command -v jq >/dev/null 2>&1 \
+    && command -v ss >/dev/null 2>&1; then
+    info "运行依赖已满足，跳过重复安装。"
+    return
+  fi
+
   info "安装运行依赖……"
 
   if command -v apt-get >/dev/null 2>&1; then
