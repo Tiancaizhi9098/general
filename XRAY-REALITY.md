@@ -25,11 +25,19 @@
 
 ## 一键安装
 
+Debian/Ubuntu：
+
 ```bash
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/Tiancaizhi9098/general/main/xray-reality-installer.sh)"
+apt-get update && apt-get install -y curl ca-certificates openssl jq iproute2 && bash -c "$(curl -fsSL https://raw.githubusercontent.com/Tiancaizhi9098/general/main/xray-reality-installer.sh)"
 ```
 
-脚本会自动安装 `curl`、`ca-certificates`、`openssl`、`jq`、`iproute2` 等依赖，无需先手动安装。
+CentOS Stream、Rocky Linux、AlmaLinux：
+
+```bash
+(command -v dnf >/dev/null 2>&1 && dnf install -y curl ca-certificates openssl jq iproute || yum install -y curl ca-certificates openssl jq iproute) && bash -c "$(curl -fsSL https://raw.githubusercontent.com/Tiancaizhi9098/general/main/xray-reality-installer.sh)"
+```
+
+一键命令会先安装依赖再执行脚本；脚本自身也会检测并补装缺失依赖。
 
 安装完成后，Mihomo YAML 会直接显示在控制台，并保存到：
 
@@ -58,6 +66,9 @@ Xray 服务端配置位于：
 示例：
 
 ```bash
+apt-get update
+apt-get install -y curl ca-certificates openssl jq iproute2
+
 PORT=8443 \
 SERVER_NAME=hkg.biliimg.com \
 REALITY_DEST=hkg.biliimg.com:443 \
