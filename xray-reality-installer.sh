@@ -171,8 +171,8 @@ generate_credentials() {
     awk -F ':[[:space:]]*' '
       {
         label = tolower($1)
-        gsub(/[ _-]/, "", label)
-        if (label == "privatekey") {
+        gsub(/[^a-z0-9]/, "", label)
+        if (label ~ /^privatekey/) {
           print $2
           exit
         }
@@ -183,8 +183,8 @@ generate_credentials() {
     awk -F ':[[:space:]]*' '
       {
         label = tolower($1)
-        gsub(/[ _-]/, "", label)
-        if (label == "publickey" || label == "password") {
+        gsub(/[^a-z0-9]/, "", label)
+        if (label ~ /^publickey/ || label ~ /^password/) {
           print $2
           exit
         }
