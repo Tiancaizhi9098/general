@@ -6,7 +6,7 @@ readonly XRAY_INSTALLER_URL="https://github.com/XTLS/Xray-install/raw/main/insta
 readonly XRAY_BIN="/usr/local/bin/xray"
 readonly XRAY_CONFIG="/usr/local/etc/xray/config.json"
 readonly MIHOMO_CONFIG="/root/mihomo-vless-reality.yaml"
-readonly SCRIPT_VERSION="2026.07.28.2"
+readonly SCRIPT_VERSION="2026.07.28.3"
 
 PORT="${PORT:-443}"
 SERVER_NAME="${SERVER_NAME:-hkg.biliimg.com}"
@@ -183,7 +183,7 @@ generate_credentials() {
 }
 
 write_xray_config() {
-  CONFIG_TMP="$(mktemp)"
+  CONFIG_TMP="$(mktemp --suffix=.json)"
 
   jq -n \
     --arg uuid "$UUID" \
