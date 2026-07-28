@@ -3,7 +3,7 @@
 ## Xray VLESS + REALITY + XTLS Vision
 
 ```bash
-apt-get update && apt-get install -y curl ca-certificates openssl jq iproute2 && bash -c "$(curl -fsSL https://raw.githubusercontent.com/Tiancaizhi9098/general/c93b8fa3ffb6d2659e3753f8b4b84c2b9b3ff519/xray-reality-installer.sh)"
+apt-get update && apt-get install -y curl ca-certificates openssl jq iproute2 && bash -c "$(curl -fsSL https://raw.githubusercontent.com/Tiancaizhi9098/general/05035155b2bf698ad099e1e256564314365e3179/xray-reality-installer.sh)"
 ```
 
 [查看详细说明](./XRAY-REALITY.md)
