@@ -6,7 +6,7 @@ readonly XRAY_INSTALLER_URL="https://github.com/XTLS/Xray-install/raw/main/insta
 readonly XRAY_BIN="/usr/local/bin/xray"
 readonly XRAY_CONFIG="/usr/local/etc/xray/config.json"
 readonly MIHOMO_CONFIG="/root/mihomo-vless-reality.yaml"
-readonly SCRIPT_VERSION="2026.07.28.3"
+readonly SCRIPT_VERSION="2026.07.28.4"
 
 PORT="${PORT:-443}"
 SERVER_NAME="${SERVER_NAME:-hkg.biliimg.com}"
@@ -270,18 +270,16 @@ yaml_double_quote() {
 }
 
 write_mihomo_config() {
-  local yaml_name
   local yaml_server
   local yaml_server_name
 
-  yaml_name="$(yaml_double_quote "$NODE_NAME")"
   yaml_server="$(yaml_double_quote "$SERVER_ADDRESS")"
   yaml_server_name="$(yaml_double_quote "$SERVER_NAME")"
 
   umask 077
   {
     printf 'proxies:\n'
-    printf '  - name: %s\n' "$yaml_name"
+    printf '  - name: %s\n' "$NODE_NAME"
     printf '    type: vless\n'
     printf '    server: %s\n' "$yaml_server"
     printf '    port: %s\n' "$PORT"
