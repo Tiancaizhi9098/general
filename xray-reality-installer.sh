@@ -6,6 +6,7 @@ readonly XRAY_INSTALLER_URL="https://github.com/XTLS/Xray-install/raw/main/insta
 readonly XRAY_BIN="/usr/local/bin/xray"
 readonly XRAY_CONFIG="/usr/local/etc/xray/config.json"
 readonly MIHOMO_CONFIG="/root/mihomo-vless-reality.yaml"
+readonly SCRIPT_VERSION="2026.07.28.2"
 
 PORT="${PORT:-443}"
 SERVER_NAME="${SERVER_NAME:-hkg.biliimg.com}"
@@ -164,33 +165,15 @@ check_listen_port() {
 
 generate_credentials() {
   local key_output
+  local -a key_values=()
 
   UUID="$("$XRAY_BIN" uuid)"
   key_output="$("$XRAY_BIN" x25519)"
-  PRIVATE_KEY="$(
-    awk -F ':[[:space:]]*' '
-      {
-        label = tolower($1)
-        gsub(/[^a-z0-9]/, "", label)
-        if (label ~ /^privatekey/) {
-          print $2
-          exit
-        }
-      }
-    ' <<<"$key_output"
-  )"
-  PUBLIC_KEY="$(
-    awk -F ':[[:space:]]*' '
-      {
-        label = tolower($1)
-        gsub(/[^a-z0-9]/, "", label)
-        if (label ~ /^publickey/ || label ~ /^password/) {
-          print $2
-          exit
-        }
-      }
-    ' <<<"$key_output"
-  )"
+  mapfile -t key_values < <(
+    grep -Eo '[A-Za-z0-9_-]{43}' <<<"$key_output" || true
+  )
+  PRIVATE_KEY="${key_values[0]:-}"
+  PUBLIC_KEY="${key_values[1]:-}"
   SHORT_ID="$(openssl rand -hex 8)"
 
   [[ -n "$UUID" ]] || die "UUID 生成失败。"
@@ -370,6 +353,7 @@ print_result() {
 
 main() {
   require_root_and_systemd
+  info "脚本版本：$SCRIPT_VERSION"
   validate_settings
   install_dependencies
   detect_server_address
