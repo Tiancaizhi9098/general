@@ -1,11 +1,9 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-NEW_PORT=30022
+DEFAULT_PORT=22
 SSH_DROPIN="/etc/ssh/sshd_config.d/00-key-only.conf"
 AUTHORIZED_KEYS="/root/.ssh/authorized_keys"
-PRIVATE_KEY="/root/ssh-key-${NEW_PORT}"
-PUBLIC_KEY="${PRIVATE_KEY}.pub"
 
 die() {
   echo "错误：$*" >&2
@@ -15,6 +13,24 @@ die() {
 [[ $EUID -eq 0 ]] || die "请使用 root 运行此脚本。"
 command -v sshd >/dev/null 2>&1 || die "未安装 OpenSSH Server，请先运行：apt update && apt install -y openssh-server"
 command -v ssh-keygen >/dev/null 2>&1 || die "未找到 ssh-keygen，请先安装 openssh-client。"
+
+if [[ -n "${SSH_PORT:-}" ]]; then
+  NEW_PORT="$SSH_PORT"
+elif [[ -r /dev/tty && -w /dev/tty ]]; then
+  printf '请输入新的 SSH 端口 [默认 %s]：' "$DEFAULT_PORT" > /dev/tty
+  IFS= read -r NEW_PORT < /dev/tty || NEW_PORT=""
+  NEW_PORT="${NEW_PORT:-$DEFAULT_PORT}"
+else
+  NEW_PORT="$DEFAULT_PORT"
+  echo "未检测到交互终端，将使用默认 SSH 端口：$NEW_PORT"
+fi
+
+[[ "$NEW_PORT" =~ ^[0-9]+$ ]] || die "SSH 端口必须是数字。"
+(( 10#$NEW_PORT >= 1 && 10#$NEW_PORT <= 65535 )) || die "SSH 端口范围必须是 1–65535。"
+NEW_PORT="$((10#$NEW_PORT))"
+
+PRIVATE_KEY="/root/ssh-key-${NEW_PORT}"
+PUBLIC_KEY="${PRIVATE_KEY}.pub"
 
 install -d -m 700 /root/.ssh
 touch "$AUTHORIZED_KEYS"
@@ -39,8 +55,10 @@ grep -qxF "$generated_public_key" "$AUTHORIZED_KEYS" \
   || printf '%s\n' "$generated_public_key" >> "$AUTHORIZED_KEYS"
 
 mkdir -p /etc/ssh/sshd_config.d
+BACKUP_FILE=""
 if [[ -f "$SSH_DROPIN" ]]; then
-  cp -a "$SSH_DROPIN" "${SSH_DROPIN}.bak.$(date +%Y%m%d-%H%M%S)"
+  BACKUP_FILE="${SSH_DROPIN}.bak.$(date +%Y%m%d-%H%M%S)"
+  cp -a "$SSH_DROPIN" "$BACKUP_FILE"
 fi
 
 tmp_file="$(mktemp)"
@@ -56,8 +74,16 @@ PermitRootLogin prohibit-password
 EOF
 install -m 600 "$tmp_file" "$SSH_DROPIN"
 
+restore_ssh_config() {
+  if [[ -n "$BACKUP_FILE" && -f "$BACKUP_FILE" ]]; then
+    cp -a "$BACKUP_FILE" "$SSH_DROPIN"
+  else
+    rm -f "$SSH_DROPIN"
+  fi
+}
+
 if ! sshd -t; then
-  rm -f "$SSH_DROPIN"
+  restore_ssh_config
   die "SSH 配置校验失败，已撤销新配置。"
 fi
 
@@ -65,10 +91,16 @@ if command -v ufw >/dev/null 2>&1 && ufw status | grep -q '^Status: active'; the
   ufw allow "${NEW_PORT}/tcp"
 fi
 
-if systemctl list-unit-files ssh.service >/dev/null 2>&1; then
-  systemctl reload ssh
+if systemctl cat ssh.service >/dev/null 2>&1; then
+  SSH_SERVICE="ssh"
 else
-  systemctl reload sshd
+  SSH_SERVICE="sshd"
+fi
+
+if ! systemctl reload "$SSH_SERVICE"; then
+  restore_ssh_config
+  systemctl reload "$SSH_SERVICE" >/dev/null 2>&1 || true
+  die "SSH 服务重载失败，已恢复修改前的配置。"
 fi
 
 echo
