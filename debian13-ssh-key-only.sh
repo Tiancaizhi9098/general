@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 
 DEFAULT_PORT=22
-SSH_DROPIN="/etc/ssh/sshd_config.d/00-key-only.conf"
+SSH_DROPIN="/etc/ssh/sshd_config.d/00-000-root-password-login.conf"
 AUTHORIZED_KEYS="/root/.ssh/authorized_keys"
 
 die() {
@@ -28,6 +28,29 @@ fi
 [[ "$NEW_PORT" =~ ^[0-9]+$ ]] || die "SSH 端口必须是数字。"
 (( 10#$NEW_PORT >= 1 && 10#$NEW_PORT <= 65535 )) || die "SSH 端口范围必须是 1–65535。"
 NEW_PORT="$((10#$NEW_PORT))"
+
+if [[ -n "${DISABLE_PASSWORD_LOGIN:-}" ]]; then
+  PASSWORD_CHOICE="$DISABLE_PASSWORD_LOGIN"
+elif [[ -r /dev/tty && -w /dev/tty ]]; then
+  printf '是否关闭 SSH 密码登录？[Y/n]：' > /dev/tty
+  IFS= read -r PASSWORD_CHOICE < /dev/tty || PASSWORD_CHOICE=""
+  PASSWORD_CHOICE="${PASSWORD_CHOICE:-y}"
+else
+  PASSWORD_CHOICE="y"
+  echo "未检测到交互终端，将默认关闭 SSH 密码登录。"
+fi
+
+case "$PASSWORD_CHOICE" in
+  y|Y|yes|YES|1)
+    DISABLE_PASSWORD_LOGIN="yes"
+    ;;
+  n|N|no|NO|0)
+    DISABLE_PASSWORD_LOGIN="no"
+    ;;
+  *)
+    die "是否关闭密码登录只能输入 y 或 n。"
+    ;;
+esac
 
 PRIVATE_KEY="/root/ssh-key-${NEW_PORT}"
 PUBLIC_KEY="${PRIVATE_KEY}.pub"
@@ -67,11 +90,25 @@ cat > "$tmp_file" <<EOF
 # Managed by debian13-ssh-key-only.sh
 Port $NEW_PORT
 PubkeyAuthentication yes
+EOF
+
+if [[ "$DISABLE_PASSWORD_LOGIN" == "yes" ]]; then
+  cat >> "$tmp_file" <<'EOF'
 PasswordAuthentication no
 KbdInteractiveAuthentication no
 ChallengeResponseAuthentication no
 PermitRootLogin prohibit-password
 EOF
+else
+  cat >> "$tmp_file" <<'EOF'
+PasswordAuthentication yes
+KbdInteractiveAuthentication yes
+ChallengeResponseAuthentication yes
+PermitRootLogin yes
+UsePAM yes
+EOF
+fi
+
 install -m 600 "$tmp_file" "$SSH_DROPIN"
 
 restore_ssh_config() {
@@ -104,7 +141,15 @@ if ! systemctl reload "$SSH_SERVICE"; then
 fi
 
 echo
-echo "设置完成：SSH 端口已改为 $NEW_PORT，密码登录已禁用，只允许密钥登录。"
+if [[ "$DISABLE_PASSWORD_LOGIN" == "yes" ]]; then
+  echo "设置完成：SSH 端口为 $NEW_PORT，密码登录已关闭，只允许密钥登录。"
+else
+  echo "设置完成：SSH 端口为 $NEW_PORT，密钥登录和密码登录均已开启。"
+  if command -v passwd >/dev/null 2>&1 \
+    && [[ "$(passwd -S root 2>/dev/null | awk '{print $2}')" != "P" ]]; then
+    echo "提醒：root 当前没有可用密码，如需密码登录请执行：passwd root"
+  fi
+fi
 echo
 echo "下面是自动生成的私钥，请完整复制并保存到你的电脑："
 echo "==================== 私钥开始 ===================="
