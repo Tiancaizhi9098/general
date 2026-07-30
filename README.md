@@ -26,6 +26,26 @@ aliyun-xray-traffic-guard status
 
 ## Debian 13 SSH 密钥登录
 
+自动生成 Ed25519 公私钥、禁用密码登录，并在执行时询问需要使用的 SSH 端口。直接按回车使用默认端口 `22`，也可以输入 `30022` 等自定义端口。
+
 ```bash
 apt-get update && apt-get install -y curl openssh-server && curl -fsSL https://raw.githubusercontent.com/Tiancaizhi9098/general/main/debian13-ssh-key-only.sh | bash
+```
+
+执行时会看到：
+
+```text
+请输入新的 SSH 端口 [默认 22]：
+```
+
+保存好脚本输出的私钥后，请不要关闭当前 SSH 窗口，先打开新终端测试：
+
+```bash
+ssh -i 私钥文件路径 -p 你设置的端口 root@服务器IP
+```
+
+确认登录成功后，可删除服务器上的私钥副本：
+
+```bash
+rm -f /root/ssh-key-你设置的端口
 ```
