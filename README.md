@@ -49,3 +49,25 @@ ssh -i 私钥文件路径 -p 你设置的端口 root@服务器IP
 ```bash
 rm -f /root/ssh-key-你设置的端口
 ```
+
+## Debian 开启 root 密码登录
+
+开启 SSH 的 root 登录和密码验证，不修改当前 SSH 端口。脚本会询问是否设置或修改 root 密码，并在配置错误时自动恢复原 SSH 配置。
+
+```bash
+apt-get update && apt-get install -y curl openssh-server passwd && curl -fsSL https://raw.githubusercontent.com/Tiancaizhi9098/general/main/debian-enable-root-password-login.sh | bash
+```
+
+执行时默认选择 `Y`，然后按照提示输入两次新的 root 密码：
+
+```text
+是否现在设置或修改 root 密码？[Y/n]：
+```
+
+设置完成后使用当前 SSH 端口登录：
+
+```bash
+ssh -p 当前端口 root@服务器IP
+```
+
+开启 root 密码登录会增加暴力破解风险，请使用强密码并限制防火墙来源地址。
